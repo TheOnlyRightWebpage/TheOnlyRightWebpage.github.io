@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> </title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        .links {
+            display: flex;
+            flex-direction: column;
+        }
+        .links a {
+            margin: 10px 0;
+            text-decoration: none;
+            color: blue;
+            font-size: 18px;
+            cursor: pointer;
+        }
+        .links a:hover {
+            text-decoration: underline;
+        }
+    </style>
+    <script>
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert(`Copied: ${text}`);
+            }).catch(err => {
+                alert('Failed to copy text: ' + err);
+            });
+        }
+    </script>
+</head>
+<body>
+    <div class="links">
+        <a href="#" onclick="copyToClipboard(`// ==UserScript==\n// @name         Average Rating - RY\n// @namespace    http://tampermonkey.net/\n// @version      0.1\n// @description  Calculates and displays the average rating for tracks.\n// @match        *://*.rateyourmusic.com/*\n// @grant        none\n// ==/UserScript==\n\n(function() {\n  'use strict';\n\n  function calculateAverageRating() {\n    const trackRatings = Array.from(document.querySelectorAll('ul#track_ratings li.track'));\n    const ratings = trackRatings.map(track => {\n      const tracklistLine = track.querySelector('.tracklist_line');\n      const textContent = tracklistLine ? tracklistLine.textContent : '';\n      const match = textContent.match(/(\\d+\\.?\\d*)/);\n      return match ? parseFloat(match[1]) : 0;\n    });\n    const sum = ratings.reduce((acc, val) => acc + val, 0);\n    const average = sum / ratings.length;\n\n    let averageRatingElement = document.getElementById('average-rating');\n    if (!averageRatingElement) {\n      averageRatingElement = document.createElement('div');\n      averageRatingElement.id = 'average-rating';\n      averageRatingElement.style.cssText = 'font-weight: bold; margin-top: 10px;';\n      document.querySelector('div#my_track_ratings').appendChild(averageRatingElement);\n    }\n    averageRatingElement.textContent = 'Average Rating: ' + average.toFixed(2);\n  }\n\n  calculateAverageRating();\n\n})();`)" >Link with Script</a>
+    </div>
+</body>
+</html>
