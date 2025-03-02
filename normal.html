@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Random Stacking Rectangles with Sound & Recording</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: -1;
+        }
+        button {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body>
+
+<button id="recordButton">Start Recording</button>
+<canvas id="canvas"></canvas>
+
+<script>
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    const recordButton = document.getElementById("recordButton");
+    
+    let recorder;
+    let chunks = [];
+    let videoStream;
+    let audioContext;
+    let audioStream;
+
+    function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+
+    function getRandomColor() {
+        return `hsl(${Math.random() * 360}, 80%, 60%)`;
+    }
+
+    function getRandomPitch() {
+        return Math.pow(Math.random(), 2) * 1000 + 200;
+    }
+
+    function playSound() {
+        if (!audioContext) {
+            // Create AudioContext on user interaction
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+
+        const osc = audioContext.createOscillator();
+        const gain = audioContext.createGain();
+        
+        osc.type = "sine";
+        osc.frequency.value = getRandomPitch();
+        gain.gain.value = 0.2;
+
+        osc.connect(gain);
+        gain.connect(audioContext.destination);
+
+        osc.start();
+        setTimeout(() => {
+            osc.stop();
+        }, 150);
+
+        // Capture audio for the recording
+        const source = audioContext.createMediaStreamSource(audioContext.destination);
+        audioStream = new MediaStream();
+        audioStream.addTrack(source.context.createGain().gain);
+    }
+
+    function drawRectangle() {
+        const width = Math.random() * 150 + 20;
+        const height = Math.random() * 150 + 20;
+
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+        const spread = Math.random() < 0.7 ? 200 : canvas.width; 
+
+        const x = centerX + (Math.random() - 0.5) * spread;
+        const y = centerY + (Math.random() - 0.5) * spread;
+
+        ctx.fillStyle = getRandomColor();
+        ctx.fillRect(x, y, width, height);
+
+        playSound();
+    }
+
+    function startDrawing() {
+        ctx.fillStyle = "white";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        setInterval(drawRectangle, 300);
+    }
+
+    function startRecording() {
+        ctx.fillStyle = "white";
+        ctx.fillRect(0, 0, canvas.width, canvas.height); 
+
+        if (recorder) {
+            recorder.stop();
+        }
+
+        videoStream = canvas.captureStream(30);
+
+        // Combine the audio and video streams
+        const combinedStream = new MediaStream();
+        videoStream.getTracks().forEach(track => combinedStream.addTrack(track));
+        audioStream.getTracks().forEach(track => combinedStream.addTrack(track));
+
+        recorder = new MediaRecorder(combinedStream, { mimeType: 'video/webm' });
+
+        chunks = [];
+        recorder.ondataavailable = (e) => chunks.push(e.data);
+        recorder.onstop = saveRecording;
+
+        recorder.start();
+        recordButton.textContent = "Recording...";
+        recordButton.disabled = true;
+
+        setTimeout(() => {
+            recorder.stop();
+            recordButton.textContent = "Start Recording";
+            recordButton.disabled = false;
+        }, 5000);
+    }
+
+    function saveRecording() {
+        const blob = new Blob(chunks, { type: "video/webm" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "recording.mp4";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    }
+
+    window.addEventListener("resize", resizeCanvas);
+    resizeCanvas();
+    startDrawing();
+    recordButton.addEventListener("click", startRecording);
+</script>
+
+</body>
+</html>
