@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: white;
+            overflow: hidden;
+            flex-direction: column;
+        }
+
+        .youtube-box {
+            width: 1280px;
+            height: 720px;
+            background-color: #fff;
+            border: 3px solid #333;
+            position: relative;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+            animation: zoomIn 3s ease-out;
+        }
+
+        @keyframes zoomIn {
+            0% {
+                transform: scale(0.5);
+                opacity: 0;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .square {
+            position: absolute;
+            opacity: 0;
+            animation: spawnSquare 5s ease-in-out forwards;
+        }
+
+        @keyframes spawnSquare {
+            0% {
+                transform: scale(0) rotate(0deg) translate(0, 0);
+                opacity: 0;
+            }
+            50% {
+                transform: scale(1.5) rotate(360deg) translate(100px, 100px);
+                opacity: 0.7;
+            }
+            100% {
+                transform: scale(1) rotate(720deg) translate(-50px, -50px);
+                opacity: 0.9;
+            }
+        }
+
+        .file-name {
+            margin-top: 20px;
+            font-family: Arial, sans-serif;
+            font-size: 20px;
+            color: #333;
+        }
+    </style>
+    <title>Cinematic Random Crazy Squares with Color Palette</title>
+</head>
+<body>
+    <div class="youtube-box" id="youtube-box"></div>
+    <div class="file-name" id="file-name"></div>
+
+    <script>
+        const youtubeBox = document.getElementById('youtube-box');
+        const fileNameElement = document.getElementById('file-name');
+
+        // Function to generate a random color palette with n colors
+        function generateRandomPalette(n) {
+            const palette = [];
+            for (let i = 0; i < n; i++) {
+                const r = Math.floor(Math.random() * 256);
+                const g = Math.floor(Math.random() * 256);
+                const b = Math.floor(Math.random() * 256);
+                palette.push(`rgb(${r}, ${g}, ${b})`);
+            }
+            return palette;
+        }
+
+        // Generate a random color palette of 5 colors (you can adjust the number)
+        const colorPalette = generateRandomPalette(5);
+
+        // Function to generate random position inside the box
+        function getRandomPosition(maxWidth, maxHeight) {
+            const x = Math.floor(Math.random() * maxWidth);
+            const y = Math.floor(Math.random() * maxHeight);
+            return { x, y };
+        }
+
+        // Function to generate a random size
+        function getRandomSize(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        // Function to create random square
+        function createRandomSquare() {
+            const square = document.createElement('div');
+            square.classList.add('square');
+
+            // Random position
+            const { x, y } = getRandomPosition(youtubeBox.offsetWidth - 100, youtubeBox.offsetHeight - 100);
+
+            // Random size
+            const size = getRandomSize(30, 150); // Size between 30px and 150px
+            square.style.width = `${size}px`;
+            square.style.height = `${size}px`;
+
+            // Get a random color from the palette
+            const color = colorPalette[Math.floor(Math.random() * colorPalette.length)];
+            square.style.backgroundColor = color;
+
+            // Set position
+            square.style.left = `${x}px`;
+            square.style.top = `${y}px`;
+
+            // Apply random timing
+            square.style.animationDelay = `${Math.random() * 3}s`;
+
+            youtubeBox.appendChild(square);
+        }
+
+        // Function to generate a random file name
+        function generateRandomFileName() {
+            const randomString = Math.random().toString(36).substring(2, 7);  // generates a random string like "d63bd"
+            const randomNumber = Math.floor(Math.random() * 100);  // generates a random number between 0 and 99
+            return `${randomString}_${randomNumber}.mp4`;  // formats it as "d63bd_35.mp4"
+        }
+
+        // Set the random file name below the squares
+        const randomFileName = generateRandomFileName();
+        fileNameElement.textContent = randomFileName;
+
+        // Generate random squares every 300ms
+        setInterval(createRandomSquare, 300);
+    </script>
+</body>
+</html>
