@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TouchDesigner-like Random Squares with Music Text</title>
+  <style>
+    body, html {
+      height: 100%;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+      background-color: #1e1e1e;
+      color: white;
+    }
+
+    .square {
+      position: absolute;
+      transition: all 1s ease;
+      will-change: transform, opacity;
+    }
+
+    .text {
+      position: absolute;
+      font-family: 'Arial', sans-serif;
+      font-size: 24px;
+      font-weight: bold;
+      color: white;
+      pointer-events: none;
+      mix-blend-mode: lighten;
+      text-shadow: 0 0 5px rgba(255, 255, 255, 0.7);
+    }
+  </style>
+</head>
+<body>
+  <script>
+    function getRandomInt(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function getRandomColor() {
+      return `rgb(${getRandomInt(0, 255)}, ${getRandomInt(0, 255)}, ${getRandomInt(0, 255)})`;
+    }
+
+    function getRandomGradient() {
+      return `linear-gradient(${getRandomInt(0, 360)}deg, ${getRandomColor()}, ${getRandomColor()})`;
+    }
+
+    function getRandomShape() {
+      return getRandomInt(0, 5); // 0: square, 1: rectangle, 2: circle, 3: triangle, 4: star, 5: hexagon
+    }
+
+    function createRandomSquare() {
+      const square = document.createElement('div');
+      document.body.appendChild(square);
+
+      // Random size between 50px and 400px
+      const size = getRandomInt(50, 400);
+      square.style.width = `${size}px`;
+      square.style.height = `${size}px`;
+
+      // Random shape (Square, Rectangle, Circle, Triangle, Star, Hexagon)
+      const shape = getRandomShape();
+      if (shape === 2) {
+        square.style.borderRadius = '50%'; // Circle
+      } else if (shape === 1) {
+        square.style.height = `${getRandomInt(50, 500)}px`; // Rectangle
+      } else if (shape === 3) {
+        // Triangle
+        square.style.width = '0';
+        square.style.height = '0';
+        square.style.borderLeft = `${size / 2}px solid transparent`;
+        square.style.borderRight = `${size / 2}px solid transparent`;
+        square.style.borderBottom = `${size}px solid ${getRandomColor()}`;
+      } else if (shape === 4) {
+        // Star (mocked as a "star" shape)
+        square.style.width = '0';
+        square.style.height = '0';
+        square.style.borderLeft = `${size / 3}px solid transparent`;
+        square.style.borderRight = `${size / 3}px solid transparent`;
+        square.style.borderBottom = `${size}px solid ${getRandomColor()}`;
+        square.style.transform = `rotate(${getRandomInt(0, 360)}deg)`;
+      } else if (shape === 5) {
+        // Hexagon (mocked)
+        square.style.width = 0;
+        square.style.height = 0;
+        square.style.borderLeft = `${size / 3}px solid transparent`;
+        square.style.borderRight = `${size / 3}px solid transparent`;
+        square.style.borderBottom = `${size}px solid ${getRandomColor()}`;
+      }
+
+      // Random color for the square or random gradient
+      if (Math.random() > 0.5) {
+        square.style.backgroundColor = getRandomColor(); // Solid color
+      } else {
+        square.style.background = getRandomGradient(); // Gradient
+      }
+
+      // Random border color and thickness
+      const borderColor = getRandomColor();
+      square.style.borderColor = borderColor;
+      const borderThickness = getRandomInt(2, 10);
+      square.style.borderWidth = `${borderThickness}px`;
+
+      // Random opacity between 0.1 and 1
+      let opacity = (Math.random() * (1 - 0.1) + 0.1).toFixed(2);
+      square.style.opacity = opacity;
+
+      // Random blur effect
+      const blurAmount = getRandomInt(0, 10);
+      square.style.filter = `blur(${blurAmount}px)`;
+
+      // Random rotation
+      const rotation = getRandomInt(0, 360);
+      square.style.transform = `rotate(${rotation}deg)`;
+
+      // Random position
+      const posX = getRandomInt(0, window.innerWidth - size);
+      const posY = getRandomInt(0, window.innerHeight - size);
+      square.style.left = `${posX}px`;
+      square.style.top = `${posY}px`;
+
+      // Add touchdesigner-like effects
+      // Noise-based movement (Perlin-like noise)
+      const noiseX = Math.random() * 10; // Simulated noise
+      const noiseY = Math.random() * 10; // Simulated noise
+
+      setInterval(() => {
+        const xMovement = Math.sin(Date.now() / 1000 + noiseX) * getRandomInt(10, 40);
+        const yMovement = Math.cos(Date.now() / 1000 + noiseY) * getRandomInt(10, 40);
+        square.style.left = `${posX + xMovement}px`;
+        square.style.top = `${posY + yMovement}px`;
+      }, 50);
+
+      // Random "camera" effect (Zoom in/out with sine wave)
+      setInterval(() => {
+        const scale = 1 + Math.sin(Date.now() / 1000) * 0.5; // Smooth zoom in/out
+        square.style.transform = `scale(${scale}) rotate(${getRandomInt(0, 360)}deg)`;
+      }, 100);
+
+      // Random Particle System (Particles emitted from squares)
+      setInterval(() => {
+        const particle = document.createElement('div');
+        document.body.appendChild(particle);
+        particle.style.width = `${getRandomInt(5, 15)}px`;
+        particle.style.height = `${getRandomInt(5, 15)}px`;
+        particle.style.position = 'absolute';
+        particle.style.left = `${parseInt(square.style.left) + getRandomInt(-20, 20)}px`;
+        particle.style.top = `${parseInt(square.style.top) + getRandomInt(-20, 20)}px`;
+        particle.style.backgroundColor = getRandomColor();
+        setTimeout(() => particle.remove(), 1000);
+      }, getRandomInt(100, 500));
+
+      // Random Flickering with color shifts
+      setInterval(() => {
+        square.style.opacity = Math.random() > 0.5 ? getRandomInt(0, 1) : getRandomInt(0, 0.5);
+        square.style.background = getRandomGradient(); // Change gradient on flicker
+      }, getRandomInt(300, 800));
+
+      // Random rotation + zooming with noise-based transformation
+      setInterval(() => {
+        const noiseAngle = Math.random() * 360;
+        const noiseScale = 1 + Math.sin(Date.now() / 1000) * 0.2; // Add some slight random zooming
+        square.style.transform = `rotate(${noiseAngle}deg) scale(${noiseScale})`;
+      }, getRandomInt(200, 800));
+
+      // Random Cloning Effect
+      setInterval(() => {
+        if (Math.random() > 0.95) {
+          createRandomSquare(); // Cloning new squares
+        }
+      }, getRandomInt(1000, 4000));
+    }
+
+    // Create multiple random squares
+    const numSquares = 40; // More chaotic
+    for (let i = 0; i < numSquares; i++) {
+      createRandomSquare();
+    }
+
+    // Create animated random music-themed text
+    function createRandomText() {
+      const text = document.createElement('div');
+      document.body.appendChild(text);
+      text.classList.add('text');
+      text.innerHTML = getRandomMusicText(); // Generate random music-themed text
+
+      // Random font size
+      const size = getRandomInt(20, 100);
+      text.style.fontSize = `${size}px`;
+
+      // Random position
+      const posX = getRandomInt(0, window.innerWidth - size);
+      const posY = getRandomInt(0, window.innerHeight - size);
+      text.style.left = `${posX}px`;
+      text.style.top = `${posY}px`;
+
+      // Random rotation
+      const rotation = getRandomInt(0, 360);
+      text.style.transform = `rotate(${rotation}deg)`;
+
+      // Random color and opacity
+      text.style.color = getRandomColor();
+      text.style.opacity = Math.random() * (1 - 0.5) + 0.5;
+
+      // Random scale and sine-wave-like animation
+      setInterval(() => {
+        const scale = 1 + Math.sin(Date.now() / 1000) * 0.2; // Smooth zoom in/out
+        text.style.transform = `scale(${scale}) rotate(${getRandomInt(0, 360)}deg)`;
+      }, 100);
+
+      // Random color change and oscillation
+      setInterval(() => {
+        text.style.color = getRandomColor(); // Change text color
+      }, getRandomInt(500, 2000));
+
+      // Random text change
+      setInterval(() => {
+        text.innerHTML = getRandomMusicText(); // Change text randomly
+      }, getRandomInt(2000, 5000));
+
+      // Random movement with sine waves
+      setInterval(() => {
+        const xMovement = Math.sin(Date.now() / 1000) * 50; // Horizontal sine movement
+        const yMovement = Math.cos(Date.now() / 1000) * 50; // Vertical sine movement
+        text.style.left = `${posX + xMovement}px`;
+        text.style.top = `${posY + yMovement}px`;
+      }, 50);
+    }
+
+    // Create multiple random music-themed text elements
+    const numText = 5; // Change to create more random text
+    for (let i = 0; i < numText; i++) {
+      createRandomText();
+    }
+
+    // Helper function to get random music-themed text
+    function getRandomMusicText() {
+      const musicTerms = [
+        'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H',
+        'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 
+        'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'
+      ];
+      const randomIndex = getRandomInt(0, musicTerms.length - 1);
+      return musicTerms[randomIndex];
+    }
+  </script>
+</body>
+</html>
