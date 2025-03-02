@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Random Stacking Rectangles with Sound & Recording</title>
+    <title>Glitchy Visuals with Image Color Sampling</title>
     <style>
         body {
             margin: 0;
@@ -14,48 +14,48 @@
             align-items: center;
             flex-direction: column;
             height: 100vh;
+            padding: 10px;
         }
         canvas {
             position: absolute;
             top: 0;
             left: 0;
             z-index: -1;
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
         }
-        .control-panel {
+        .control-container {
             position: absolute;
-            top: 20px;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
             display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            width: 100%;
+            flex-direction: column;
+            align-items: center;
             z-index: 10;
+            gap: 10px;
+            width: 100%;
         }
-        .control-panel button,
-        .control-panel input {
-            padding: 10px 20px;
+        button, input {
+            width: 80%;
+            padding: 10px;
             font-size: 16px;
             cursor: pointer;
-            margin: 5px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            border: none;
+            border-radius: 5px;
         }
-        .control-panel input[type="range"] {
-            width: 200px;
-        }
-        .control-panel .speed-text {
-            font-size: 16px;
-            margin-left: 10px;
+        input[type="range"] {
+            width: 80%;
         }
     </style>
 </head>
 <body>
 
-<div class="control-panel">
+<div class="control-container">
     <button id="recordButton">Start Recording</button>
-    <button id="uploadButton">Upload Image</button>
-    <input id="speedSlider" type="range" min="50" max="1000" value="300" step="50">
-    <span class="speed-text" id="speedValue">Speed: 300</span>
+    <button id="imageButton">Random Colors from Image</button>
+    <input type="range" id="speedSlider" min="0" max="10" value="5">
+    <span id="speedValue">Speed: 5</span>
 </div>
 
 <canvas id="canvas"></canvas>
@@ -64,7 +64,7 @@
     const canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
     const recordButton = document.getElementById("recordButton");
-    const uploadButton = document.getElementById("uploadButton");
+    const imageButton = document.getElementById("imageButton");
     const speedSlider = document.getElementById("speedSlider");
     const speedValue = document.getElementById("speedValue");
 
@@ -73,36 +73,16 @@
     let videoStream;
     let audioContext;
     let audioStream;
+    let speed = 5;
+    let pixelColors = []; // To store image colors
 
-    let randomPattern = true;
-    let drawingInterval = 300; // Initial drawing speed interval
-
-    let colorPalette = [];
-
-    // Scale the canvas to the full window size
+    // Adjust canvas size to fit within the screen
     function resizeCanvas() {
-        const aspectRatio = 16 / 9; // Standard video ratio (adjustable if you want a different ratio)
-        const windowWidth = window.innerWidth;
-        const windowHeight = window.innerHeight;
-
-        if (windowWidth / windowHeight > aspectRatio) {
-            canvas.width = windowHeight * aspectRatio;
-            canvas.height = windowHeight;
-        } else {
-            canvas.width = windowWidth;
-            canvas.height = windowWidth / aspectRatio;
-        }
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
     }
 
-    function getRandomColor() {
-        // Use a random color from the image palette if available
-        if (colorPalette.length > 0) {
-            return colorPalette[Math.floor(Math.random() * colorPalette.length)];
-        }
-        return `hsl(${Math.random() * 360}, 80%, 60%)`;
-    }
-
-    function playSound() {
+    function playGlitchSound() {
         if (!audioContext) {
             audioContext = new (window.AudioContext || window.webkitAudioContext)();
         }
@@ -110,12 +90,9 @@
         const osc = audioContext.createOscillator();
         const gain = audioContext.createGain();
 
-        osc.type = ["sine", "square", "triangle", "sawtooth"][Math.floor(Math.random() * 4)];
-        
-        // Use the speed value for frequency: higher speed -> higher frequency
-        osc.frequency.value = (Math.random() * (speedSlider.value)) + 200; // Incorporating speed into frequency
-
-        gain.gain.value = Math.random() * 0.5;
+        osc.type = "sine";
+        osc.frequency.value = Math.random() * 1000 + 200;
+        gain.gain.value = 0.2;
 
         osc.connect(gain);
         gain.connect(audioContext.destination);
@@ -124,92 +101,45 @@
         setTimeout(() => {
             osc.stop();
         }, 150);
+
+        const source = audioContext.createMediaStreamSource(audioContext.destination);
+        audioStream = new MediaStream();
+        audioStream.addTrack(source.context.createGain().gain);
     }
 
-    function drawRectangle() {
-        const width = Math.random() * 150 + 20;
-        const height = Math.random() * 150 + 20;
-        const angle = Math.random() * 360;
-
-        const centerX = canvas.width / 2;
-        const centerY = canvas.height / 2;
-        const spread = Math.random() < 0.7 ? 200 : canvas.width;
-
-        const x = centerX + (Math.random() - 0.5) * spread;
-        const y = centerY + (Math.random() - 0.5) * spread;
-
-        ctx.fillStyle = getRandomColor();
-        ctx.save();
-        ctx.translate(x + width / 2, y + height / 2);
-        ctx.rotate(angle * Math.PI / 180);
-        ctx.fillRect(-width / 2, -height / 2, width, height);
-        ctx.restore();
-
-        if (Math.random() < 0.5) {
-            playSound();
-        }
-
+    function glitchEffect() {
+        // Randomly apply glitch effects
         if (Math.random() < 0.1) {
-            playSound();
+            // Flicker effect (flicker screen at random intervals)
+            ctx.fillStyle = `rgb(${Math.random() * 255}, ${Math.random() * 255}, ${Math.random() * 255})`;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
         }
-    }
 
-    function drawCircle() {
-        const radius = Math.random() * 100 + 50;
-
-        const centerX = canvas.width / 2;
-        const centerY = canvas.height / 2;
-        const spread = Math.random() < 0.7 ? 200 : canvas.width;
-
-        const x = centerX + (Math.random() - 0.5) * spread;
-        const y = centerY + (Math.random() - 0.5) * spread;
-
-        ctx.fillStyle = getRandomColor();
-        ctx.beginPath();
-        ctx.arc(x, y, radius, 0, Math.PI * 2);
-        ctx.fill();
-
-        playSound();
-    }
-
-    function drawPolygon() {
-        const sides = Math.floor(Math.random() * 5) + 3; // between 3 and 7 sides
-        const radius = Math.random() * 100 + 50;
-
-        const centerX = canvas.width / 2;
-        const centerY = canvas.height / 2;
-        const spread = Math.random() < 0.7 ? 200 : canvas.width;
-
-        const x = centerX + (Math.random() - 0.5) * spread;
-        const y = centerY + (Math.random() - 0.5) * spread;
-
-        ctx.fillStyle = getRandomColor();
-        ctx.beginPath();
-        for (let i = 0; i < sides; i++) {
-            const angle = (i * 2 * Math.PI) / sides;
-            const px = x + radius * Math.cos(angle);
-            const py = y + radius * Math.sin(angle);
-            ctx.lineTo(px, py);
+        if (Math.random() < 0.2) {
+            // Pixel shift effect (random shifting of canvas pixels)
+            ctx.translate(Math.random() * 10 - 5, Math.random() * 10 - 5);
         }
-        ctx.closePath();
-        ctx.fill();
 
-        playSound();
+        // Random shape distortion with RGB split from image colors
+        const randomColor = pixelColors[Math.floor(Math.random() * pixelColors.length)];
+        ctx.fillStyle = `rgb(${randomColor[0]}, ${randomColor[1]}, ${randomColor[2]})`;
+
+        const x = Math.random() * canvas.width;
+        const y = Math.random() * canvas.height;
+        const width = Math.random() * 100 + 50;
+        const height = Math.random() * 100 + 50;
+
+        ctx.fillRect(x, y, width, height);
+
+        // Play a glitch sound
+        playGlitchSound();
     }
 
     function startDrawing() {
-        ctx.fillStyle = "white";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        setInterval(() => {
-            [drawRectangle, drawCircle, drawPolygon][Math.floor(Math.random() * 3)]();
-        }, drawingInterval);
+        setInterval(glitchEffect, 300);
     }
 
     function startRecording() {
-        ctx.fillStyle = "white";
-        ctx.fillRect(0, 0, canvas.width, canvas.height); 
-
         if (recorder) {
             recorder.stop();
         }
@@ -230,13 +160,15 @@
         recorder.start();
         recordButton.textContent = "Recording...";
         recordButton.disabled = true;
-        uploadButton.disabled = true; // Hide upload image button during recording
+        imageButton.disabled = true;
+        speedSlider.disabled = true;
 
         setTimeout(() => {
             recorder.stop();
             recordButton.textContent = "Start Recording";
             recordButton.disabled = false;
-            uploadButton.disabled = false; // Show upload image button again after recording
+            imageButton.disabled = false;
+            speedSlider.disabled = false;
         }, 5000);
     }
 
@@ -251,60 +183,51 @@
         document.body.removeChild(a);
     }
 
-    // Event listeners
+    imageButton.addEventListener("click", () => {
+        const input = document.createElement("input");
+        input.type = "file";
+        input.accept = "image/*";
+        input.onchange = (e) => {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const img = new Image();
+                img.src = event.target.result;
+                img.onload = () => {
+                    const canvasImage = document.createElement("canvas");
+                    const imgCtx = canvasImage.getContext("2d");
+                    canvasImage.width = img.width;
+                    canvasImage.height = img.height;
+                    imgCtx.drawImage(img, 0, 0);
+                    const imageData = imgCtx.getImageData(0, 0, img.width, img.height);
+                    pixelColors = []; // Clear any existing colors
+
+                    // Extract pixel colors
+                    for (let i = 0; i < imageData.data.length; i += 4) {
+                        pixelColors.push([
+                            imageData.data[i],     // Red
+                            imageData.data[i + 1], // Green
+                            imageData.data[i + 2]  // Blue
+                        ]);
+                    }
+
+                    console.log("Image colors loaded:", pixelColors.length);
+                };
+            };
+            reader.readAsDataURL(e.target.files[0]);
+        };
+        input.click();
+    });
+
+    speedSlider.addEventListener("input", (e) => {
+        speed = e.target.value;
+        speedValue.textContent = `Speed: ${speed}`;
+    });
+
     window.addEventListener("resize", resizeCanvas);
     resizeCanvas();
     startDrawing();
 
     recordButton.addEventListener("click", startRecording);
-    uploadButton.addEventListener("click", () => {
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.accept = 'image/*';
-        input.onchange = (event) => {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const img = new Image();
-                    img.onload = () => {
-                        // Don't draw the image, just extract colors
-                        extractColorsFromImage(img);
-                    };
-                    img.src = e.target.result;
-                };
-                reader.readAsDataURL(file);
-            }
-        };
-        input.click();
-    });
-
-    function extractColorsFromImage(img) {
-        // Create an offscreen canvas to extract image data
-        const tempCanvas = document.createElement('canvas');
-        const tempCtx = tempCanvas.getContext('2d');
-        tempCanvas.width = img.width;
-        tempCanvas.height = img.height;
-        tempCtx.drawImage(img, 0, 0);
-
-        // Get pixel data
-        const imageData = tempCtx.getImageData(0, 0, img.width, img.height);
-        const data = imageData.data;
-        
-        colorPalette = [];
-        for (let i = 0; i < data.length; i += 4) {
-            const r = data[i];
-            const g = data[i + 1];
-            const b = data[i + 2];
-            colorPalette.push(`rgb(${r},${g},${b})`);
-        }
-    }
-
-    speedSlider.addEventListener("input", (e) => {
-        drawingInterval = parseInt(e.target.value);
-        speedValue.textContent = `Speed: ${drawingInterval}`;
-    });
-
 </script>
 
 </body>
