@@ -16,8 +16,10 @@
         }
 
         .youtube-box {
-            width: 1280px;
-            height: 720px;
+            width: 90vw; /* Responsive width */
+            height: auto;
+            max-height: 80vh; /* Prevent overflow */
+            aspect-ratio: 16 / 9; /* Maintains 16:9 ratio */
             background-color: #fff;
             border: 3px solid #333;
             position: relative;
@@ -63,6 +65,15 @@
             font-family: Arial, sans-serif;
             font-size: 20px;
             color: #333;
+            text-align: center;
+        }
+
+        /* Mobile adjustments */
+        @media (max-width: 600px) {
+            .youtube-box {
+                width: 100vw; /* Full width */
+                max-height: 60vh; /* Smaller height */
+            }
         }
     </style>
     <title>Cinematic Random Crazy Squares with Color Palette</title>
@@ -75,7 +86,7 @@
         const youtubeBox = document.getElementById('youtube-box');
         const fileNameElement = document.getElementById('file-name');
 
-        // Function to generate a random color palette with n colors
+        // Function to generate a random color palette
         function generateRandomPalette(n) {
             const palette = [];
             for (let i = 0; i < n; i++) {
@@ -87,13 +98,12 @@
             return palette;
         }
 
-        // Generate a random color palette of 5 colors (you can adjust the number)
         const colorPalette = generateRandomPalette(5);
 
         // Function to generate random position inside the box
         function getRandomPosition(maxWidth, maxHeight) {
-            const x = Math.floor(Math.random() * maxWidth);
-            const y = Math.floor(Math.random() * maxHeight);
+            const x = Math.floor(Math.random() * (maxWidth - 50)); // Prevents overflow
+            const y = Math.floor(Math.random() * (maxHeight - 50));
             return { x, y };
         }
 
@@ -102,16 +112,16 @@
             return Math.floor(Math.random() * (max - min + 1)) + min;
         }
 
-        // Function to create random square
+        // Function to create a random square
         function createRandomSquare() {
             const square = document.createElement('div');
             square.classList.add('square');
 
-            // Random position
-            const { x, y } = getRandomPosition(youtubeBox.offsetWidth - 100, youtubeBox.offsetHeight - 100);
+            // Get random position inside the youtube-box
+            const { x, y } = getRandomPosition(youtubeBox.clientWidth - 100, youtubeBox.clientHeight - 100);
 
-            // Random size
-            const size = getRandomSize(30, 150); // Size between 30px and 150px
+            // Get random size
+            const size = getRandomSize(30, 150);
             square.style.width = `${size}px`;
             square.style.height = `${size}px`;
 
@@ -131,14 +141,13 @@
 
         // Function to generate a random file name
         function generateRandomFileName() {
-            const randomString = Math.random().toString(36).substring(2, 7);  // generates a random string like "d63bd"
-            const randomNumber = Math.floor(Math.random() * 100);  // generates a random number between 0 and 99
-            return `${randomString}_${randomNumber}.mp4`;  // formats it as "d63bd_35.mp4"
+            const randomString = Math.random().toString(36).substring(2, 7);
+            const randomNumber = Math.floor(Math.random() * 100);
+            return `${randomString}_${randomNumber}.mp4`;
         }
 
-        // Set the random file name below the squares
-        const randomFileName = generateRandomFileName();
-        fileNameElement.textContent = randomFileName;
+        // Set the random file name
+        fileNameElement.textContent = generateRandomFileName();
 
         // Generate random squares every 300ms
         setInterval(createRandomSquare, 300);
